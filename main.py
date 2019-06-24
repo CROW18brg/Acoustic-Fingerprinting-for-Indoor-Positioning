@@ -16,7 +16,7 @@ mycursor = mydb.cursor()
 #
 sql = "INSERT INTO customers (name, address) VALUES (%s, %s)"
 val = ("musica4", "asa5adada6878787a7")
-a=1
+
 #mycursor.execute(sql, val)
 
 #mydb.commit()
