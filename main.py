@@ -14,8 +14,8 @@ mycursor = mydb.cursor()
 
 #mycursor.execute("CREATE TABLE quarto (name VARCHAR(255), f1 VARCHAR(255)),f2")
 #
-#sql = "INSERT INTO customers (name, address) VALUES (%s, %s)"
-#val = ("musica4", "asa5adada6878787a7")
+sql = "INSERT INTO customers (name, address) VALUES (%s, %s)"
+val = ("musica4", "asa5adada6878787a7")
 #mycursor.execute(sql, val)
 
 #mydb.commit()
