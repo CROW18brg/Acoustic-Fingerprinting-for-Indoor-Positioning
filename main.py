@@ -10,6 +10,9 @@ from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import (generate_binary_structure,iterate_structure, binary_erosion)
 import hashlib
 from operator import itemgetter
+from numpy import cos, sin, pi, absolute, arange
+from scipy.signal import lfilter, firwin, freqz
+from pylab import figure, clf, plot, xlabel, ylabel, xlim, ylim, title, grid, axes, show
 
 
 mydb = mysql.connector.connect(
@@ -19,13 +22,43 @@ mydb = mysql.connector.connect(
  database="FingerprintingDatabase"
 )
 
-def saveFingerprint(hash_list):
+def saveFingerprint(ambiente,hash_list):
     mycursor = mydb.cursor()
+
+    sql = "SELECT id FROM ambientes WHERE descricao='"+ambiente+"'"
+    mycursor.execute(sql)
+    ambienteId = mycursor.fetchone()[0]
+    print("ID ambiente: ",ambienteId)
+
+    sql = "INSERT INTO registos (id_ambiente) VALUES ("+str(ambienteId)+")"
+    mycursor.execute(sql)
+    mydb.commit()
+
+    sql = "SELECT id FROM registos ORDER BY id DESC LIMIT 1"
+    mycursor.execute(sql)
+    myresult = mycursor.fetchone()[0]
+    print("Last insert: ",myresult)
+
     for i in range(0,len(hash_list)):
         sql = "INSERT INTO fingerprint (sha1_hash, time_offset, registo_id) VALUES (%s,%s,%s)"
-        val = (hash_list[i][0],int(hash_list[i][1]),5)
+        val = (hash_list[i][0],int(hash_list[i][1]),myresult)
         mycursor.execute(sql, val)
         mydb.commit()
+
+def getFingerprint(id):
+    mycursor = mydb.cursor()
+    mycursor.execute("SELECT sha1_hash FROM fingerprint WHERE registo_id="+str(id))
+    myresult = mycursor.fetchall()
+    return myresult
+
+def getAllRegisters():
+    mycursor = mydb.cursor()
+    mycursor.execute("SELECT * FROM ambientes")
+    myresult = mycursor.fetchall()
+    for x in myresult:
+        print(x)
+
+    return myresult
 
 
 def getSoundSample():
@@ -168,6 +201,24 @@ def generate_hashes(peaks, fan_value):
                     h = hashlib.sha1(str_to_hash.encode('utf-8'))
                     yield (h.hexdigest()[0:FINGERPRINT_REDUCTION], t1)
 
+def calcularRelacao(lista1,lista2):
+    count=0
+    for i in range(len(lista1)):
+        for j in range(len(lista2)):
+            if lista1[i][0] == lista2[j][0]:
+                count+=1
+
+    print("Count  : ",count)
+    print("Relação: ",count/len(lista1))
+
+def filtroLowPass(audio,cutoff_hz,ordem):
+    nyq_rate = samplerate / 2.0
+    taps = firwin(ordem, cutoff_hz / nyq_rate)  # b coefficients = taps
+    filtered_audio = lfilter(taps, 1.0, audio)
+    plt.plot(audio)
+    plt.show()
+    return filtered_audio
+
 if __name__ == '__main__':
     threshold = 70.0  # Minimum amplitude in spectrogram in order to be considered a peak.
     buffer_size = 4096
@@ -182,9 +233,18 @@ if __name__ == '__main__':
 
     #waveOutputFilename = getSoundSample()
 
-    #samplerate, audio = readAudioFile('audioFiles/05 - Bad Guy_2.wav')
+    #samplerate, audio = readAudioFile('audioFiles/05 - Bad Guy_4.wav')
+
+
     #f, t, S = calculateSpectrogram(audio)
     #local_max_list=extractEnergyPeaks(f, t, S)
     #hashes = generate_hashes(peaks=local_max_list, fan_value=5)
     #hash_list = list(hashes)
-    #saveFingerprint(hash_list)
+    #saveFingerprint('jazz',hash_list)
+
+    #lista3 = getFingerprint(10)
+    #lista5 = getFingerprint(11)
+
+    #calcularRelacao(lista3,lista5)
+
+    getAllRegisters()
