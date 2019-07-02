@@ -53,13 +53,15 @@ def getFingerprint(id):
 
 def getAllRegisters():
     mycursor = mydb.cursor()
-    mycursor.execute("SELECT * FROM ambientes")
-    myresult = mycursor.fetchall()
-    for x in myresult:
-        print(x)
 
-    return myresult
+    sql = "SELECT ambientes.descricao,registos.id " \
+          "FROM registos " \
+          "INNER JOIN ambientes ON registos.id_ambiente = ambientes.id_ambiente\
+          ORDER BY ambientes.descricao;"
 
+    mycursor.execute(sql)
+    result = mycursor.fetchall()
+    return result
 
 def getSoundSample():
     p = pyaudio.PyAudio()
@@ -208,8 +210,7 @@ def calcularRelacao(lista1,lista2):
             if lista1[i][0] == lista2[j][0]:
                 count+=1
 
-    print("Count  : ",count)
-    print("Relação: ",count/len(lista1))
+    return count/len(lista1),count
 
 def filtroLowPass(audio,cutoff_hz,ordem):
     nyq_rate = samplerate / 2.0
@@ -235,16 +236,22 @@ if __name__ == '__main__':
 
     #samplerate, audio = readAudioFile('audioFiles/05 - Bad Guy_4.wav')
 
-
     #f, t, S = calculateSpectrogram(audio)
     #local_max_list=extractEnergyPeaks(f, t, S)
     #hashes = generate_hashes(peaks=local_max_list, fan_value=5)
     #hash_list = list(hashes)
     #saveFingerprint('jazz',hash_list)
 
-    #lista3 = getFingerprint(10)
-    #lista5 = getFingerprint(11)
+    amostra = getFingerprint(17)
 
-    #calcularRelacao(lista3,lista5)
+    listaTiposAudio = getAllRegisters()
 
-    getAllRegisters()
+    resultadosMatching=[]
+    for tipoAudio in listaTiposAudio:
+        fingerPrint = getFingerprint(tipoAudio[1])
+        resultado = calcularRelacao(amostra, fingerPrint)
+        thistuple = tuple((tipoAudio[0],resultado[0],resultado[1]))
+        resultadosMatching.append(thistuple)
+
+    for i in resultadosMatching:
+        print(i)
