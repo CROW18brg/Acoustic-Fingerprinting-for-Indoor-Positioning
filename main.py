@@ -22,16 +22,19 @@ mydb = mysql.connector.connect(
  database="FingerprintingDatabase"
 )
 
-def saveFingerprint(ambiente,hash_list):
+def saveFingerprint(ambiente,hash_list,nome):
     mycursor = mydb.cursor()
 
-    sql = "SELECT id FROM ambientes WHERE descricao='"+ambiente+"'"
+    sql = "SELECT id_ambiente FROM ambientes WHERE descricao='"+ambiente+"'"
     mycursor.execute(sql)
     ambienteId = mycursor.fetchone()[0]
     print("ID ambiente: ",ambienteId)
 
-    sql = "INSERT INTO registos (id_ambiente) VALUES ("+str(ambienteId)+")"
-    mycursor.execute(sql)
+    #sql = "INSERT INTO registos (id_ambiente,nome) VALUES ("+str(ambienteId)+","+str(nome)+")"
+    #mycursor.execute(sql)
+    sql = "INSERT INTO registos (id_ambiente,nome) VALUES (%s,%s)"
+    val = (ambienteId,nome)
+    mycursor.execute(sql, val)
     mydb.commit()
 
     sql = "SELECT id FROM registos ORDER BY id DESC LIMIT 1"
@@ -103,13 +106,9 @@ def readAudioFile(filename):
 
 def calculateSpectrogram(audio):
     plt.rcParams['figure.figsize'] = 16, 4
-
-    segment_length = samplerate // 5
-    frequency_res = samplerate / segment_length
-    freq_limit = 1000  # in Hz
     index_limit = int(freq_limit // frequency_res)
     print(frequency_res, index_limit)
-    segment_overlap = samplerate // 10
+
     print(segment_length, segment_overlap)
 
     f, t, S = signal.spectrogram(audio, samplerate, window='flattop', nperseg=segment_length, noverlap=segment_overlap,
@@ -209,7 +208,6 @@ def calcularRelacao(lista1,lista2):
         for j in range(len(lista2)):
             if lista1[i][0] == lista2[j][0]:
                 count+=1
-
     return count/len(lista1),count
 
 def filtroLowPass(audio,cutoff_hz,ordem):
@@ -228,22 +226,23 @@ if __name__ == '__main__':
     samplerate = 48000
     buffer_size = 4096
     freq_limit = 1000  # in Hz
-    segment_length = samplerate // 5
+    segment_length = samplerate // 2
+    segment_overlap = samplerate // 4
     frequency_res = samplerate / segment_length
     index_limit = int(freq_limit // frequency_res)
 
     #waveOutputFilename = getSoundSample()
+    samplerate, audio = readAudioFile('audioFiles/DEUTSCHLAND.wav')
+    f, t, S = calculateSpectrogram(audio)
+    local_max_list=extractEnergyPeaks(f, t, S)
+    hashes = generate_hashes(peaks=local_max_list, fan_value=5)
+    hash_list = list(hashes)
+    saveFingerprint('Metal',hash_list,'DEUTSCHLAND')
 
-    #samplerate, audio = readAudioFile('audioFiles/05 - Bad Guy_4.wav')
 
-    #f, t, S = calculateSpectrogram(audio)
-    #local_max_list=extractEnergyPeaks(f, t, S)
-    #hashes = generate_hashes(peaks=local_max_list, fan_value=5)
-    #hash_list = list(hashes)
-    #saveFingerprint('jazz',hash_list)
+    '''
 
     amostra = getFingerprint(17)
-
     listaTiposAudio = getAllRegisters()
 
     resultadosMatching=[]
@@ -255,3 +254,4 @@ if __name__ == '__main__':
 
     for i in resultadosMatching:
         print(i)
+    '''
