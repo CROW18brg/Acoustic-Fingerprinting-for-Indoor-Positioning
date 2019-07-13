@@ -232,12 +232,12 @@ if __name__ == '__main__':
     index_limit = int(freq_limit // frequency_res)
 
     #waveOutputFilename = getSoundSample()
-    samplerate, audio = readAudioFile('audioFiles/DEUTSCHLAND.wav')
+    samplerate, audio = readAudioFile('audioFiles/RightRound.wav')
     f, t, S = calculateSpectrogram(audio)
     local_max_list=extractEnergyPeaks(f, t, S)
     hashes = generate_hashes(peaks=local_max_list, fan_value=5)
     hash_list = list(hashes)
-    saveFingerprint('Metal',hash_list,'DEUTSCHLAND')
+    saveFingerprint('Hip Hop',hash_list,'Right Round')
 
 
     '''
