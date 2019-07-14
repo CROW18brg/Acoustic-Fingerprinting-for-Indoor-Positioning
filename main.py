@@ -57,7 +57,7 @@ def getFingerprint(id):
 def getAllRegisters():
     mycursor = mydb.cursor()
 
-    sql = "SELECT ambientes.descricao,registos.id " \
+    sql = "SELECT ambientes.descricao,registos.nome,registos.id " \
           "FROM registos " \
           "INNER JOIN ambientes ON registos.id_ambiente = ambientes.id_ambiente\
           ORDER BY ambientes.descricao;"
@@ -232,26 +232,30 @@ if __name__ == '__main__':
     index_limit = int(freq_limit // frequency_res)
 
     #waveOutputFilename = getSoundSample()
-    samplerate, audio = readAudioFile('audioFiles/RightRound.wav')
+    samplerate, audio = readAudioFile('audioFiles/Teste/RightRoundTeste_2.wav')
     f, t, S = calculateSpectrogram(audio)
     local_max_list=extractEnergyPeaks(f, t, S)
     hashes = generate_hashes(peaks=local_max_list, fan_value=5)
     hash_list = list(hashes)
-    saveFingerprint('Hip Hop',hash_list,'Right Round')
+    #saveFingerprint('Hip Hop',hash_list,'Right Round')
 
 
-    '''
-
-    amostra = getFingerprint(17)
+    amostra = hash_list
     listaTiposAudio = getAllRegisters()
 
     resultadosMatching=[]
     for tipoAudio in listaTiposAudio:
-        fingerPrint = getFingerprint(tipoAudio[1])
+        fingerPrint = getFingerprint(tipoAudio[2])
         resultado = calcularRelacao(amostra, fingerPrint)
-        thistuple = tuple((tipoAudio[0],resultado[0],resultado[1]))
+        thistuple = tuple((tipoAudio[0],tipoAudio[1],resultado[0],resultado[1]))
         resultadosMatching.append(thistuple)
 
-    for i in resultadosMatching:
-        print(i)
-    '''
+    max=resultadosMatching[1]
+
+    for resultado in resultadosMatching:
+        print(resultado)
+        if resultado[2]>max[2]:
+            max=resultado
+    print("\n\nMax :",max)
+
+
